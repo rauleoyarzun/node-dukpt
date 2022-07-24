@@ -99,8 +99,8 @@ class Dukpt {
         return DataOperations.XORdataHex(variantMask, derivedPEK); // apply mask
     }
 
-    static encryptTDES(key, data, encryptTrueFalse) {
-        const CBC = 1; // cipher block chaining enabled
+    static encryptTDES(key, data, encryptTrueFalse, mode='CBC') {
+        const CBC = mode === 'CBC' ? 1 : 0;
         const iv = '\0\0\0\0\0\0\0\0'; // initial vector
 
         // convert to binary
@@ -129,7 +129,8 @@ class Dukpt {
         const _defaultOptions = {
             encryptionMode: '3DES',
             inputEncoding: 'ascii',
-            outputEncoding: 'hex'
+            outputEncoding: 'hex',
+            mode: 'CBC'
         };
 
         const options = { ..._defaultOptions, ...encryptOptions };
@@ -159,7 +160,7 @@ class Dukpt {
 
         switch (options.encryptionMode.toUpperCase()) {
         case '3DES':
-            encryptedOutput = Dukpt.encryptTDES(key, data, true);
+            encryptedOutput = Dukpt.encryptTDES(key, data, true, options.mode.toUpperCase());
             break;
         case 'AES':
             encryptedOutput = Dukpt.encryptAES(key, data);
@@ -190,7 +191,8 @@ class Dukpt {
             decryptionMode: '3DES',
             trimOutput: false,
             inputEncoding: 'hex',
-            outputEncoding: 'ascii'
+            outputEncoding: 'ascii',
+            mode: 'CBC'
         };
 
         const options = { ..._defaultOptions, ...decryptOptions };
@@ -209,7 +211,7 @@ class Dukpt {
 
         switch (options.decryptionMode.toUpperCase()) {
         case '3DES':
-            decryptedOutput = Dukpt.encryptTDES(key, encryptedData, false);
+            decryptedOutput = Dukpt.encryptTDES(key, encryptedData, false, options.mode.toUpperCase());
             break;
         case 'AES':
             decryptedOutput = Dukpt.decryptAES(key, encryptedData);
