@@ -43,11 +43,10 @@ class Dukpt {
         return Dukpt._createDataKeyHex(ipek, ksn);
     }
 
-    static _createDataKeyHex(ipek, ksn) {
+    static _createDataKeyHex(ipek, ksn, iv = '\0\0\0\0\0\0\0\0') {
         const derivedPEK = Dukpt._deriveKeyHex(ipek, ksn);
 
         const CBC = 1; // cipher block chaining enabled
-        const iv = '\0\0\0\0\0\0\0\0'; // initial vector
         const variantMask = '0000000000FF00000000000000FF0000'; // data variant
 
         let maskedPEK = DataOperations.XORdataHex(variantMask, derivedPEK); // apply mask
@@ -99,9 +98,8 @@ class Dukpt {
         return DataOperations.XORdataHex(variantMask, derivedPEK); // apply mask
     }
 
-    static encryptTDES(key, data, encryptTrueFalse, mode='CBC') {
+    static encryptTDES(key, data, encryptTrueFalse, mode = 'CBC', iv = '\0\0\0\0\0\0\0\0') {
         const CBC = mode === 'CBC' ? 1 : 0;
-        const iv = '\0\0\0\0\0\0\0\0'; // initial vector
 
         // convert to binary
         const binaryKey = DataOperations.hexstringToData(key);
@@ -160,10 +158,10 @@ class Dukpt {
 
         switch (options.encryptionMode.toUpperCase()) {
         case '3DES':
-            encryptedOutput = Dukpt.encryptTDES(key, data, true, options.mode.toUpperCase());
+            encryptedOutput = Dukpt.encryptTDES(key, data, true, options.mode.toUpperCase(), options.iv);
             break;
         case 'AES':
-            encryptedOutput = Dukpt.encryptAES(key, data);
+            encryptedOutput = Dukpt.encryptAES(key, data, options.iv);
             break;
         default:
             throw new Error('unsupported dukpt encryption method');
@@ -211,10 +209,10 @@ class Dukpt {
 
         switch (options.decryptionMode.toUpperCase()) {
         case '3DES':
-            decryptedOutput = Dukpt.encryptTDES(key, encryptedData, false, options.mode.toUpperCase());
+            decryptedOutput = Dukpt.encryptTDES(key, encryptedData, false, options.mode.toUpperCase(), options.iv);
             break;
         case 'AES':
-            decryptedOutput = Dukpt.decryptAES(key, encryptedData);
+            decryptedOutput = Dukpt.decryptAES(key, encryptedData, options.iv);
             break;
         default:
             throw new Error('unsupported dukpt decryption method');
@@ -242,9 +240,8 @@ class Dukpt {
         return key + key.substring(0, key.length / 2);
     }
 
-    static _createIPEK(bdk, ksn) {
+    static _createIPEK(bdk, ksn, iv = '\0\0\0\0\0\0\0\0') {
         const CBC = 1; // cipher block chaining enabled
-        const iv = '\0\0\0\0\0\0\0\0'; // initial vector
 
         let key = Dukpt._EDE3KeyExpand(bdk); // make 24-byte key
         key = DataOperations.hexstringToData(key); // make it binary
@@ -338,9 +335,8 @@ class Dukpt {
         return left + right; // binary
     }
 
-    static _encryptRegister(key, reg) {
+    static _encryptRegister(key, reg, iv = '\0\0\0\0\0\0\0\0') {
         const CBC = 1; // cipher block chaining enabled
-        const iv = '\0\0\0\0\0\0\0\0'; // initial vector
 
         const bottom8 = key.substring(key.length - 8); // bottom 8 bytes
 
@@ -726,7 +722,7 @@ class Dukpt {
         return keys;
     }
 
-    static encryptAES(key, data) {
+    static encryptAES(key, data, iv = null) {
         // convert to integer arrays for AES
         const keyArray = DataOperations.hexstringToNumericArray(key);
         const dataArray = DataOperations.hexstringToNumericArray(data);
@@ -736,9 +732,6 @@ class Dukpt {
         }
 
         while (dataArray.length % 16) { dataArray.push(0); } // pad with zeroes
-
-        // The initialization vector, which can be null
-        const iv = null;
 
         // We will use CBC mode:
         const CBC = aesjs.ModeOfOperation.cbc;
@@ -760,7 +753,7 @@ class Dukpt {
         return DataOperations.hexstringToData(DataOperations.numericArrayToHexstring(bytes));
     }
 
-    static decryptAES(key, data) {
+    static decryptAES(key, data, iv = null) {
         // convert to integer arrays for AES
         const keyArray = DataOperations.hexstringToNumericArray(key);
         const dataArray = DataOperations.hexstringToNumericArray(data);
@@ -772,9 +765,6 @@ class Dukpt {
         while (dataArray.length % 16) {
             dataArray.push(0);
         } // pad with zeroes
-
-        // The initialization vector, which can be null
-        const iv = null;
 
         // We will use CBC mode:
         const CBC = aesjs.ModeOfOperation.cbc;

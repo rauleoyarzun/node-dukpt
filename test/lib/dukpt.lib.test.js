@@ -86,6 +86,23 @@ describe('dukpt encryption tests with hex output encoding and aes encryption mod
         done();
     });
 
+    it('should generate correct encrypted output when input encoding type : hex and random iv provided', (done) => {
+        let encrypted = dukpt.dukptEncrypt(cc_trackdata_example, {
+            inputEncoding: 'ascii',
+            encryptionMode: '3DES',
+            iv: "12345678"
+        });
+
+        let decrypted = dukpt.dukptDecrypt(encrypted, {
+            inputEncoding: 'hex',
+            encryptionMode: '3DES',
+            iv: "12345678"
+        });
+
+        decrypted.should.equal(cc_trackdata_example);
+        done();
+    });
+
     it('should generate correct encrypted output when input encoding type : hex', (done) => {
         let encrypted = dukpt.dukptEncrypt(cc_trackdata_hex_example, {
             inputEncoding: 'hex',
